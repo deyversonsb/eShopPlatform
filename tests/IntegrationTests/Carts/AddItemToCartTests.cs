@@ -49,7 +49,9 @@ public sealed class AddItemToCartTests : BaseIntegrationTest
             IndividualClient.Create(Faker.Name.FirstName(), Faker.Name.LastName())
         }.AsQueryable();
 
-        _dbContextMock.Setup(db => db.IndividualClients).ReturnsDbSet(GetMockDbSet<IndividualClient>(clients).Object);
+        Mock<DbSet<IndividualClient>> mockIndividualClient = TestHelpers.GetMockDbSet<IndividualClient>(clients);
+
+        _dbContextMock.Setup(db => db.IndividualClients).ReturnsDbSet(mockIndividualClient.Object);
 
         var command = new AddItemToCartCommand(client.Id, Guid.NewGuid(), Quantity, false);
 
@@ -87,9 +89,12 @@ public sealed class AddItemToCartTests : BaseIntegrationTest
             product
         }.AsQueryable();
 
-        _dbContextMock.Setup(db => db.IndividualClients).ReturnsDbSet(GetMockDbSet<IndividualClient>(clients).Object);
+        Mock<DbSet<IndividualClient>> mockIndividualClient = TestHelpers.GetMockDbSet<IndividualClient>(clients);
+        Mock<DbSet<Product>> mockProducts = TestHelpers.GetMockDbSet<Product>(products);
 
-        _dbContextMock.Setup(db => db.Products).ReturnsDbSet(GetMockDbSet<Product>(products).Object);
+        _dbContextMock.Setup(db => db.IndividualClients).ReturnsDbSet(mockIndividualClient.Object);
+
+        _dbContextMock.Setup(db => db.Products).ReturnsDbSet(mockProducts.Object);
 
         var command = new AddItemToCartCommand(client.Id, product.Id, Quantity, false);
 
@@ -140,9 +145,12 @@ public sealed class AddItemToCartTests : BaseIntegrationTest
             product
         }.AsQueryable();
 
-        _dbContextMock.Setup(db => db.ProfessionalClients).ReturnsDbSet(GetMockDbSet<ProfessionalClient>(clients).Object);
+        Mock<DbSet<ProfessionalClient>> mockProfessionalClient = TestHelpers.GetMockDbSet<ProfessionalClient>(clients);
+        Mock<DbSet<Product>> mockProducts = TestHelpers.GetMockDbSet<Product>(products);
 
-        _dbContextMock.Setup(db => db.Products).ReturnsDbSet(GetMockDbSet<Product>(products).Object);
+        _dbContextMock.Setup(db => db.ProfessionalClients).ReturnsDbSet(mockProfessionalClient.Object);
+
+        _dbContextMock.Setup(db => db.Products).ReturnsDbSet(mockProducts.Object);
 
         var command = new AddItemToCartCommand(client.Id, product.Id, Quantity, true);
 
@@ -193,9 +201,12 @@ public sealed class AddItemToCartTests : BaseIntegrationTest
             product
         }.AsQueryable();
 
-        _dbContextMock.Setup(db => db.ProfessionalClients).ReturnsDbSet(GetMockDbSet<ProfessionalClient>(clients).Object);
+        Mock<DbSet<ProfessionalClient>> mockProfessionalClient = TestHelpers.GetMockDbSet<ProfessionalClient>(clients);
+        Mock<DbSet<Product>> mockProducts = TestHelpers.GetMockDbSet<Product>(products);
 
-        _dbContextMock.Setup(db => db.Products).ReturnsDbSet(GetMockDbSet<Product>(products).Object);
+        _dbContextMock.Setup(db => db.ProfessionalClients).ReturnsDbSet(mockProfessionalClient.Object);
+
+        _dbContextMock.Setup(db => db.Products).ReturnsDbSet(mockProducts.Object);
 
         var command = new AddItemToCartCommand(client.Id, product.Id, Quantity, true);
 
@@ -217,22 +228,5 @@ public sealed class AddItemToCartTests : BaseIntegrationTest
                           i.Price == product.ProfessionalPriceLessThan10);
         result.Value
             .TotalPrice.Should().Be(Quantity * product.ProfessionalPriceLessThan10);
-    }
-
-    internal static Mock<DbSet<TEntity>> GetMockDbSet<TEntity>(
-        IQueryable<TEntity> queryable) 
-        where TEntity : class
-    {
-        var mockDbSet = new Mock<DbSet<TEntity>>();
-        mockDbSet.As<IQueryable<TEntity>>()
-            .Setup(m => m.Provider).Returns(queryable.Provider);
-        mockDbSet.As<IQueryable<TEntity>>()
-            .Setup(m => m.Expression).Returns(queryable.Expression);
-        mockDbSet.As<IQueryable<TEntity>>()
-            .Setup(m => m.ElementType).Returns(queryable.ElementType);
-        mockDbSet.As<IQueryable<TEntity>>()
-            .Setup(m => m.GetEnumerator()).Returns(queryable.GetEnumerator());
-
-        return mockDbSet;
     }
 }
