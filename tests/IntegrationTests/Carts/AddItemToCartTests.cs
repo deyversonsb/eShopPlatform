@@ -49,17 +49,7 @@ public sealed class AddItemToCartTests : BaseIntegrationTest
             IndividualClient.Create(Faker.Name.FirstName(), Faker.Name.LastName())
         }.AsQueryable();
 
-        var mockClientSet = new Mock<DbSet<IndividualClient>>();
-        mockClientSet.As<IQueryable<IndividualClient>>()
-            .Setup(m => m.Provider).Returns(clients.Provider);
-        mockClientSet.As<IQueryable<IndividualClient>>()
-            .Setup(m => m.Expression).Returns(clients.Expression);
-        mockClientSet.As<IQueryable<IndividualClient>>()
-            .Setup(m => m.ElementType).Returns(clients.ElementType);
-        mockClientSet.As<IQueryable<IndividualClient>>()
-            .Setup(m => m.GetEnumerator()).Returns(clients.GetEnumerator());
-
-        _dbContextMock.Setup(db => db.IndividualClients).ReturnsDbSet(mockClientSet.Object);
+        _dbContextMock.Setup(db => db.IndividualClients).ReturnsDbSet(GetMockDbSet<IndividualClient>(clients).Object);
 
         var command = new AddItemToCartCommand(client.Id, Guid.NewGuid(), Quantity, false);
 
@@ -97,29 +87,9 @@ public sealed class AddItemToCartTests : BaseIntegrationTest
             product
         }.AsQueryable();
 
-        var mockClientSet = new Mock<DbSet<IndividualClient>>();
-        mockClientSet.As<IQueryable<IndividualClient>>()
-            .Setup(m => m.Provider).Returns(clients.Provider);
-        mockClientSet.As<IQueryable<IndividualClient>>()
-            .Setup(m => m.Expression).Returns(clients.Expression);
-        mockClientSet.As<IQueryable<IndividualClient>>()
-            .Setup(m => m.ElementType).Returns(clients.ElementType);
-        mockClientSet.As<IQueryable<IndividualClient>>()
-            .Setup(m => m.GetEnumerator()).Returns(clients.GetEnumerator());
+        _dbContextMock.Setup(db => db.IndividualClients).ReturnsDbSet(GetMockDbSet<IndividualClient>(clients).Object);
 
-        var mockProductSet = new Mock<DbSet<Product>>();
-        mockProductSet.As<IQueryable<Product>>()
-            .Setup(m => m.Provider).Returns(products.Provider);
-        mockProductSet.As<IQueryable<Product>>()
-            .Setup(m => m.Expression).Returns(products.Expression);
-        mockProductSet.As<IQueryable<Product>>()
-            .Setup(m => m.ElementType).Returns(products.ElementType);
-        mockProductSet.As<IQueryable<Product>>()
-            .Setup(m => m.GetEnumerator()).Returns(products.GetEnumerator());
-
-        _dbContextMock.Setup(db => db.IndividualClients).ReturnsDbSet(mockClientSet.Object);
-
-        _dbContextMock.Setup(db => db.Products).ReturnsDbSet(mockProductSet.Object);
+        _dbContextMock.Setup(db => db.Products).ReturnsDbSet(GetMockDbSet<Product>(products).Object);
 
         var command = new AddItemToCartCommand(client.Id, product.Id, Quantity, false);
 
@@ -143,4 +113,126 @@ public sealed class AddItemToCartTests : BaseIntegrationTest
             .TotalPrice.Should().Be(Quantity * product.IndividualPrice);
     }
 
+    [Fact]
+    public async Task ProfessionalClient_ShouldBeAbleTo_AddItemToCart_WhenAnnualRevenue_GreaterThan10M()
+    {
+        // Arrange
+        var client = ProfessionalClient.Create(
+                Faker.Company.CompanyName(),
+                "VAT0123456",
+                "BRN0123456",
+                10_500M);
+
+        var product = Product.Create(
+           Faker.Commerce.ProductName(),
+           ProductType.Laptops,
+           2000m,
+           1000m,
+           1500m);
+
+        IQueryable<ProfessionalClient> clients = new List<ProfessionalClient>
+        {
+            client
+        }.AsQueryable();
+
+        IQueryable<Product> products = new List<Product>
+        {
+            product
+        }.AsQueryable();
+
+        _dbContextMock.Setup(db => db.ProfessionalClients).ReturnsDbSet(GetMockDbSet<ProfessionalClient>(clients).Object);
+
+        _dbContextMock.Setup(db => db.Products).ReturnsDbSet(GetMockDbSet<Product>(products).Object);
+
+        var command = new AddItemToCartCommand(client.Id, product.Id, Quantity, true);
+
+        var handler = new AddItemToCartCommandHandler(_dbContextMock.Object, CartService);
+
+        // Act
+        Result<Cart> result = await handler.Handle(command, default);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+
+        result.Value.ClientId.Should().Be(client.Id);
+
+        result.Value
+            .Items
+            .Should()
+            .Contain(i => i.Quantity == Quantity &&
+                          i.ProductId == product.Id &&
+                          i.Price == product.ProfessionalPriceGreaterThan10);
+        result.Value
+            .TotalPrice.Should().Be(Quantity * product.ProfessionalPriceGreaterThan10);
+    }
+
+    [Fact]
+    public async Task ProfessionalClient_ShouldBeAbleTo_AddItemToCart_WhenAnnualRevenue_LessThan10M()
+    {
+        // Arrange
+        var client = ProfessionalClient.Create(
+                Faker.Company.CompanyName(),
+                "VAT0123456",
+                "BRN0123456",
+                5_000M);
+
+        var product = Product.Create(
+           Faker.Commerce.ProductName(),
+           ProductType.Laptops,
+           2000m,
+           1000m,
+           1500m);
+
+        IQueryable<ProfessionalClient> clients = new List<ProfessionalClient>
+        {
+            client
+        }.AsQueryable();
+
+        IQueryable<Product> products = new List<Product>
+        {
+            product
+        }.AsQueryable();
+
+        _dbContextMock.Setup(db => db.ProfessionalClients).ReturnsDbSet(GetMockDbSet<ProfessionalClient>(clients).Object);
+
+        _dbContextMock.Setup(db => db.Products).ReturnsDbSet(GetMockDbSet<Product>(products).Object);
+
+        var command = new AddItemToCartCommand(client.Id, product.Id, Quantity, true);
+
+        var handler = new AddItemToCartCommandHandler(_dbContextMock.Object, CartService);
+
+        // Act
+        Result<Cart> result = await handler.Handle(command, default);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+
+        result.Value.ClientId.Should().Be(client.Id);
+
+        result.Value
+            .Items
+            .Should()
+            .Contain(i => i.Quantity == Quantity &&
+                          i.ProductId == product.Id &&
+                          i.Price == product.ProfessionalPriceLessThan10);
+        result.Value
+            .TotalPrice.Should().Be(Quantity * product.ProfessionalPriceLessThan10);
+    }
+
+    internal static Mock<DbSet<TEntity>> GetMockDbSet<TEntity>(
+        IQueryable<TEntity> queryable) 
+        where TEntity : class
+    {
+        var mockDbSet = new Mock<DbSet<TEntity>>();
+        mockDbSet.As<IQueryable<TEntity>>()
+            .Setup(m => m.Provider).Returns(queryable.Provider);
+        mockDbSet.As<IQueryable<TEntity>>()
+            .Setup(m => m.Expression).Returns(queryable.Expression);
+        mockDbSet.As<IQueryable<TEntity>>()
+            .Setup(m => m.ElementType).Returns(queryable.ElementType);
+        mockDbSet.As<IQueryable<TEntity>>()
+            .Setup(m => m.GetEnumerator()).Returns(queryable.GetEnumerator());
+
+        return mockDbSet;
+    }
 }
