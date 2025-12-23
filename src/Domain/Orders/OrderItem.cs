@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using SharedKernel;
 
-namespace Domain.Order;
+namespace Domain.Orders;
 
 public sealed class OrderItem : Entity
 {

@@ -12,5 +12,6 @@ public interface IApplicationDbContext
 	DbSet<IndividualClient> IndividualClients { get; }
 	DbSet<ProfessionalClient> ProfessionalClients { get; }
 	DbSet<Product> Products { get; }
-	Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+    DbSet<Domain.Orders.Order> Orders { get; }
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

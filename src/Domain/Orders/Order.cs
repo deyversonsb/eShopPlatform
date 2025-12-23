@@ -4,7 +4,7 @@ using System.Text;
 using Domain.Products;
 using SharedKernel;
 
-namespace Domain.Order;
+namespace Domain.Orders;
 
 public sealed class Order : Entity
 {

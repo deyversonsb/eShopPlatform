@@ -1,5 +1,6 @@
 ﻿
 using Application.Abstractions.Messaging;
+using Application.Carts;
 using Application.Carts.AddItemToCart;
 using SharedKernel;
 using Web.Api.Extensions;
@@ -14,7 +15,7 @@ internal sealed class AddToCart : IEndpoint
     {
         app.MapPost("carts/add", async (
             Request request, 
-            ICommandHandler<AddItemToCartCommand> handler,
+            ICommandHandler<AddItemToCartCommand, Cart> handler,
             CancellationToken cancellationToken) =>
         {
             var command = new AddItemToCartCommand(
@@ -23,9 +24,9 @@ internal sealed class AddToCart : IEndpoint
                 request.Quantity,
                 request.IsProfessionalClient);
 
-            Result result = await handler.Handle(command, cancellationToken);
+            Result<Cart> result = await handler.Handle(command, cancellationToken);
 
-			return result.Match(() => Results.Ok(), CustomResults.Problem);
+			return result.Match(Results.Ok, CustomResults.Problem);
         })
         .WithTags(Tags.Carts);
 	}

@@ -126,10 +126,21 @@ public sealed class AddItemToCartTests : BaseIntegrationTest
 		var handler = new AddItemToCartCommandHandler(_dbContextMock.Object, CartService);
 
         // Act
-        Result result = await handler.Handle(command, default);
+        Result<Cart> result = await handler.Handle(command, default);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
+
+        result.Value.ClientId.Should().Be(client.Id);
+
+        result.Value
+            .Items
+            .Should()
+            .Contain(i => i.Quantity == Quantity &&
+                          i.ProductId == product.Id &&
+                          i.Price == product.IndividualPrice);
+        result.Value
+            .TotalPrice.Should().Be(Quantity * product.IndividualPrice);
     }
 
 }

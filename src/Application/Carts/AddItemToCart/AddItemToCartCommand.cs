@@ -9,4 +9,4 @@ public record AddItemToCartCommand(
 	Guid ClientId,
 	Guid ProductId,
 	decimal Quantity,
-	bool IsProfessionalClient) : ICommand;
+	bool IsProfessionalClient) : ICommand<Cart>;

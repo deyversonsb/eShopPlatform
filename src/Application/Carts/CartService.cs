@@ -35,20 +35,16 @@ public sealed class CartService(ICacheService cacheService)
 
 		CartItem? existingCartItem = cart.Items.Find(c => c.ProductId == cartItem.ProductId);
 
-		if (existingCartItem is null)
-		{
-			cart.Items.Add(cartItem);
-		}
-		else if (existingCartItem.Quantity > cartItem.Quantity)
-		{
-			existingCartItem.Quantity -= cartItem.Quantity;
-		}
-		else
-		{
-			existingCartItem.Quantity += existingCartItem.Quantity == cartItem.Quantity ? 
-										 0 : 
-										 cartItem.Quantity;
-		}
+        if (existingCartItem is null)
+        {
+            cart.Items.Add(cartItem);
+        }
+        else
+        {
+            existingCartItem.Quantity = existingCartItem.Quantity == cartItem.Quantity ?
+                                        0 :
+                                        cartItem.Quantity;
+        }
 
 		await cacheService.SetAsync(cacheKey, cart, DefaultExpiration, cancellationToken);
 	}

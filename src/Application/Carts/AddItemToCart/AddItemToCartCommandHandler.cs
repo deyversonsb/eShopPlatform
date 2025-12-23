@@ -12,9 +12,9 @@ namespace Application.Carts.AddItemToCart;
 
 internal sealed class AddItemToCartCommandHandler(
     IApplicationDbContext context,
-    CartService cartService) : ICommandHandler<AddItemToCartCommand>
+    CartService cartService) : ICommandHandler<AddItemToCartCommand, Cart>
 {
-    public async Task<Result> Handle(AddItemToCartCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Cart>> Handle(AddItemToCartCommand command, CancellationToken cancellationToken)
     {
         ProfessionalClient? professionalClient = null;
 		IndividualClient? individualClient = null;
@@ -30,14 +30,14 @@ internal sealed class AddItemToCartCommandHandler(
 
 		if (professionalClient is null && individualClient is null)
 		{
-			return Result.Failure(Error.NotFound("Client.NotFound", $"Client with ID {command.ClientId} was not found."));
+			return Result.Failure<Cart>(Error.NotFound("Client.NotFound", $"Client with ID {command.ClientId} was not found."));
 		}
 
         Product? product = await context.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == command.ProductId, cancellationToken);
 
         if (product is null)
         {
-			return Result.Failure(Error.NotFound("Product.NotFound", $"Product with ID {command.ProductId} was not found."));
+			return Result.Failure<Cart>(Error.NotFound("Product.NotFound", $"Product with ID {command.ProductId} was not found."));
 		}
 
         var cartItem = new CartItem
@@ -51,7 +51,9 @@ internal sealed class AddItemToCartCommandHandler(
 
         await cartService.AddItemAsync(command.ClientId, cartItem, cancellationToken);
 
-		return Result.Success();
+        Cart cart = await cartService.GetAsync(command.ClientId, cancellationToken);
+
+		return cart;
     }
     internal static decimal SetPriceForProfessionalClient(Product product, decimal annualRevenue) =>
         annualRevenue switch

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Application.Abstractions.Data;
 using Domain.Clients;
-using Domain.Order;
+using Domain.Orders;
 using Domain.Products;
 using Microsoft.EntityFrameworkCore;
 
