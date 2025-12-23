@@ -40,28 +40,11 @@ public class ClearCartTests : BaseIntegrationTest
             ProfessionalClient.Create(Faker.Company.CompanyName(), "VATNumber", "BusinessNumber", 10_000m)
         }.AsQueryable();
 
-        var mockClientSet = new Mock<DbSet<IndividualClient>>();
-        mockClientSet.As<IQueryable<IndividualClient>>()
-            .Setup(m => m.Provider).Returns(clients.Provider);
-        mockClientSet.As<IQueryable<IndividualClient>>()
-            .Setup(m => m.Expression).Returns(clients.Expression);
-        mockClientSet.As<IQueryable<IndividualClient>>()
-            .Setup(m => m.ElementType).Returns(clients.ElementType);
-        mockClientSet.As<IQueryable<IndividualClient>>()
-            .Setup(m => m.GetEnumerator()).Returns(clients.GetEnumerator());
+        Mock<DbSet<IndividualClient>> mockIndividualClient = TestHelpers.GetMockDbSet<IndividualClient>(clients);
+        Mock<DbSet<ProfessionalClient>> mockProfessionalClient = TestHelpers.GetMockDbSet<ProfessionalClient>(professionalClients);
 
-        var mockProfessionalSet = new Mock<DbSet<ProfessionalClient>>();
-        mockProfessionalSet.As<IQueryable<ProfessionalClient>>()
-            .Setup(m => m.Provider).Returns(professionalClients.Provider);
-        mockProfessionalSet.As<IQueryable<ProfessionalClient>>()
-            .Setup(m => m.Expression).Returns(professionalClients.Expression);
-        mockProfessionalSet.As<IQueryable<ProfessionalClient>>()
-            .Setup(m => m.ElementType).Returns(professionalClients.ElementType);
-        mockProfessionalSet.As<IQueryable<ProfessionalClient>>()
-            .Setup(m => m.GetEnumerator()).Returns(professionalClients.GetEnumerator());
-
-        _dbContextMock.Setup(db => db.IndividualClients).ReturnsDbSet(mockClientSet.Object);
-        _dbContextMock.Setup(db => db.ProfessionalClients).ReturnsDbSet(mockProfessionalSet.Object);
+        _dbContextMock.Setup(db => db.IndividualClients).ReturnsDbSet(mockIndividualClient.Object);
+        _dbContextMock.Setup(db => db.ProfessionalClients).ReturnsDbSet(mockProfessionalClient.Object);
 
         var command = new ClearCartCommand(client.Id);
 
@@ -92,28 +75,11 @@ public class ClearCartTests : BaseIntegrationTest
             ProfessionalClient.Create(Faker.Company.CompanyName(), "VATNumber", "BusinessNumber", 10_000m)
         }.AsQueryable();
 
-        var mockClientSet = new Mock<DbSet<IndividualClient>>();
-        mockClientSet.As<IQueryable<IndividualClient>>()
-            .Setup(m => m.Provider).Returns(clients.Provider);
-        mockClientSet.As<IQueryable<IndividualClient>>()
-            .Setup(m => m.Expression).Returns(clients.Expression);
-        mockClientSet.As<IQueryable<IndividualClient>>()
-            .Setup(m => m.ElementType).Returns(clients.ElementType);
-        mockClientSet.As<IQueryable<IndividualClient>>()
-            .Setup(m => m.GetEnumerator()).Returns(clients.GetEnumerator());
+        Mock<DbSet<IndividualClient>> mockIndividualClient = TestHelpers.GetMockDbSet<IndividualClient>(clients);
+        Mock<DbSet<ProfessionalClient>> mockProfessionalClient = TestHelpers.GetMockDbSet<ProfessionalClient>(professionalClients);
 
-        var mockProfessionalSet = new Mock<DbSet<ProfessionalClient>>();
-        mockProfessionalSet.As<IQueryable<ProfessionalClient>>()
-            .Setup(m => m.Provider).Returns(professionalClients.Provider);
-        mockProfessionalSet.As<IQueryable<ProfessionalClient>>()
-            .Setup(m => m.Expression).Returns(professionalClients.Expression);
-        mockProfessionalSet.As<IQueryable<ProfessionalClient>>()
-            .Setup(m => m.ElementType).Returns(professionalClients.ElementType);
-        mockProfessionalSet.As<IQueryable<ProfessionalClient>>()
-            .Setup(m => m.GetEnumerator()).Returns(professionalClients.GetEnumerator());
-
-        _dbContextMock.Setup(db => db.IndividualClients).ReturnsDbSet(mockClientSet.Object);
-        _dbContextMock.Setup(db => db.ProfessionalClients).ReturnsDbSet(mockProfessionalSet.Object);
+        _dbContextMock.Setup(db => db.IndividualClients).ReturnsDbSet(mockIndividualClient.Object);
+        _dbContextMock.Setup(db => db.ProfessionalClients).ReturnsDbSet(mockProfessionalClient.Object);
 
         var command = new ClearCartCommand(client.Id);
 
