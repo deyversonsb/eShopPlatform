@@ -41,9 +41,7 @@ public sealed class CartService(ICacheService cacheService)
         }
         else
         {
-            existingCartItem.Quantity = existingCartItem.Quantity == cartItem.Quantity ?
-                                        0 :
-                                        cartItem.Quantity;
+            existingCartItem.Quantity = cartItem.Quantity;
         }
 
 		await cacheService.SetAsync(cacheKey, cart, DefaultExpiration, cancellationToken);
