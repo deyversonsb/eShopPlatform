@@ -31,4 +31,4 @@ jobs:
         run: dotnet test eShopPlatform.slnx --configuration Release --no-restore --no-build
 
       - name: Publish
-        run: dotnet publish eShopPlatform.slnx --configuration Release --no-restore --no-build
+        run: dotnet publish eShopPlatform.slnx --configuration Release --no-restore --no-build --no-test

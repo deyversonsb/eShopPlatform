@@ -9,6 +9,7 @@ using Application.Abstractions.Data;
 using Application.Carts;
 using Application.Carts.AddItemToCart;
 using Application.Clients.Create;
+using Application.Products.Create;
 using Castle.Core.Resource;
 using Domain.Clients;
 using Domain.Products;
@@ -29,6 +30,9 @@ public sealed class AddItemToCartTests : BaseIntegrationTest
     private readonly Mock<IApplicationDbContext> _dbContextMock;
 
     public const decimal Quantity = 10;
+    private const decimal IndividualPrice = 2000m;
+    private const decimal ProfessionalPriceGreaterThan10 = 1000m;
+    private const decimal ProfessionalPriceLessThan10 = 1500m;
 
     public AddItemToCartTests(IntegrationTestWebAppFactory factory)
         : base(factory)
@@ -40,22 +44,8 @@ public sealed class AddItemToCartTests : BaseIntegrationTest
     public async Task Should_ReturnFailure_WhenIndividualClientDoesNotExist()
     {
         //Arrange
-        var client = IndividualClient.Create(
-                Faker.Name.FirstName(),
-                Faker.Name.LastName());
-
-        IQueryable<IndividualClient> clients = new List<IndividualClient>
-        {
-            IndividualClient.Create(Faker.Name.FirstName(), Faker.Name.LastName())
-        }.AsQueryable();
-
-        Mock<DbSet<IndividualClient>> mockIndividualClient = TestHelpers.GetMockDbSet<IndividualClient>(clients);
-
-        _dbContextMock.Setup(db => db.IndividualClients).ReturnsDbSet(mockIndividualClient.Object);
-
-        var command = new AddItemToCartCommand(client.Id, Guid.NewGuid(), Quantity, false);
-
-        var handler = new AddItemToCartCommandHandler(_dbContextMock.Object, CartService);
+        var command = new AddItemToCartCommand(Guid.NewGuid(), Guid.NewGuid(), Quantity, false);
+        var handler = new AddItemToCartCommandHandler(DbContext, CartService);
 
         //Act
         Result result = await handler.Handle(command, default);
@@ -65,40 +55,25 @@ public sealed class AddItemToCartTests : BaseIntegrationTest
     }
 
     [Fact]
-	public async Task IndividualClient_ShouldBeAbleTo_AddItemToCart()
-	{
+    public async Task IndividualClient_ShouldBeAbleTo_AddItemToCart()
+    {
         // Arrange
-        var client = IndividualClient.Create(
-                Faker.Name.FirstName(), 
-                Faker.Name.LastName());
+        var createClientHandler = new CreateClientCommandHandler(DbContext);
+        Guid clientId = (await createClientHandler.Handle(new(Faker.Name.FirstName(), Faker.Name.LastName()), default)).Value;
 
-        var product = Product.Create(
-           Faker.Commerce.ProductName(),
-           ProductType.Laptops,
-           2000m,
-           1000m,
-           1500m);
+        var createProductHandler = new CreateProductCommandHandler(DbContext);
+        Guid productId = (await createProductHandler
+            .Handle(new(
+                Faker.Commerce.ProductName(),
+                ProductType.Laptops,
+                IndividualPrice,
+                ProfessionalPriceGreaterThan10,
+                ProfessionalPriceLessThan10),
+                default))
+            .Value;
 
-        IQueryable<IndividualClient> clients = new List<IndividualClient>
-        {
-            client
-        }.AsQueryable();
-
-        IQueryable<Product> products = new List<Product>
-        {
-            product
-        }.AsQueryable();
-
-        Mock<DbSet<IndividualClient>> mockIndividualClient = TestHelpers.GetMockDbSet<IndividualClient>(clients);
-        Mock<DbSet<Product>> mockProducts = TestHelpers.GetMockDbSet<Product>(products);
-
-        _dbContextMock.Setup(db => db.IndividualClients).ReturnsDbSet(mockIndividualClient.Object);
-
-        _dbContextMock.Setup(db => db.Products).ReturnsDbSet(mockProducts.Object);
-
-        var command = new AddItemToCartCommand(client.Id, product.Id, Quantity, false);
-
-		var handler = new AddItemToCartCommandHandler(_dbContextMock.Object, CartService);
+        var command = new AddItemToCartCommand(clientId, productId, Quantity, false);
+		var handler = new AddItemToCartCommandHandler(DbContext, CartService);
 
         // Act
         Result<Cart> result = await handler.Handle(command, default);
@@ -106,16 +81,16 @@ public sealed class AddItemToCartTests : BaseIntegrationTest
         // Assert
         result.IsSuccess.Should().BeTrue();
 
-        result.Value.ClientId.Should().Be(client.Id);
+        result.Value.ClientId.Should().Be(clientId);
 
         result.Value
             .Items
             .Should()
             .Contain(i => i.Quantity == Quantity &&
-                          i.ProductId == product.Id &&
-                          i.Price == product.IndividualPrice);
+                          i.ProductId == productId &&
+                          i.Price == IndividualPrice);
         result.Value
-            .TotalPrice.Should().Be(Quantity * product.IndividualPrice);
+            .TotalPrice.Should().Be(Quantity * IndividualPrice);
     }
 
     [Fact]

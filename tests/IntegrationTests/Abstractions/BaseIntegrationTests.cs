@@ -12,15 +12,17 @@ namespace IntegrationTests.Abstractions;
 public abstract class BaseIntegrationTest : IDisposable
 {
     private readonly IServiceScope _scope;
-    protected readonly Faker Faker = new();    
-    protected readonly CartService CartService;
-    protected readonly ApplicationDbContext DbContext;
+    protected Faker Faker { get; }  
+    protected CartService CartService { get; }
+
+    protected ApplicationDbContext DbContext { get; }
 
     protected BaseIntegrationTest(IntegrationTestWebAppFactory factory)
     {
         _scope = factory.Services.CreateScope();
         CartService = _scope.ServiceProvider.GetRequiredService<CartService>();
         DbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Faker = new();
     }
     public void Dispose()
     {
