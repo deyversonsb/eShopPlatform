@@ -25,10 +25,10 @@ jobs:
         run: dotnet restore eShopPlatform.slnx
 
       - name: Build
-        run: dotnet build eShopPlatform.slnx --configuration Release --no-restore
+        run: dotnet build ./eShopPlatform.slnx --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test eShopPlatform.slnx --configuration Release --no-restore --no-build
+        run: dotnet test ./eShopPlatform.slnx --configuration Release --no-restore --no-build
 
       - name: Publish
-        run: dotnet publish eShopPlatform.slnx --configuration Release --no-restore --no-build --no-test
+        run: dotnet publish ./eShopPlatform.slnx --configuration Release --no-restore --no-build
