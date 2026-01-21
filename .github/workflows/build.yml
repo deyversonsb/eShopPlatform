@@ -22,7 +22,7 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore
-        run: dotnet restore eShopPlatform.slnx
+        run: dotnet restore ./eShopPlatform.slnx
 
       - name: Build
         run: dotnet build ./eShopPlatform.slnx --configuration Release --no-restore
