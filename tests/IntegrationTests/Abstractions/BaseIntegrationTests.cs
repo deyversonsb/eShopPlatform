@@ -8,8 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace IntegrationTests.Abstractions;
 
-[Collection(nameof(IntegrationTestCollection))]
-public abstract class BaseIntegrationTest : IDisposable
+public abstract class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, IDisposable
 {
     private readonly IServiceScope _scope;
     protected Faker Faker { get; }  
