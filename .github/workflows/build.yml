@@ -28,7 +28,7 @@ jobs:
         run: dotnet build ./eShopPlatform.slnx --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test ./eShopPlatform.slnx --configuration Release --no-restore --no-build
+        run: dotnet test ./eShopPlatform.slnx --configuration Release --no-restore --no-build --verbosity normal
 
       - name: Publish
         run: dotnet publish ./eShopPlatform.slnx --configuration Release --no-restore --no-build
