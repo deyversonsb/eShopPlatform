@@ -4,51 +4,33 @@ using System.Text;
 using Application.Abstractions.Data;
 using Application.Carts.AddItemToCart;
 using Application.Carts.ClearCart;
+using Application.Clients.Create;
+using Application.Products.Create;
 using Domain.Clients;
+using Domain.Products;
 using FluentAssertions;
 using IntegrationTests.Abstractions;
 using Microsoft.EntityFrameworkCore;
-using Moq;
-using Moq.EntityFrameworkCore;
 using SharedKernel;
 
 namespace IntegrationTests.Carts;
 public class ClearCartTests : BaseIntegrationTest
 {
-    private readonly Mock<IApplicationDbContext> _dbContextMock;
     public ClearCartTests(IntegrationTestWebAppFactory factory)
         : base(factory)
     {
-        _dbContextMock = new();
     }
 
     [Fact]
     public async Task Should_ReturnFailure_WhenClientDoesNotExist()
     {
         //Arrange
-        var client = IndividualClient.Create(
-                Faker.Name.FirstName(),
-                Faker.Name.LastName());
+        var createClientHandler = new CreateClientCommandHandler(DbContext);
+        await createClientHandler.CreateClientAsync();
 
-        IQueryable<IndividualClient> clients = new List<IndividualClient>
-        {
-            IndividualClient.Create(Faker.Name.FirstName(), Faker.Name.LastName())
-        }.AsQueryable();
+        var command = new ClearCartCommand(Guid.NewGuid());
 
-        IQueryable<ProfessionalClient> professionalClients = new List<ProfessionalClient>
-        {
-            ProfessionalClient.Create(Faker.Company.CompanyName(), "VATNumber", "BusinessNumber", 10_000m)
-        }.AsQueryable();
-
-        Mock<DbSet<IndividualClient>> mockIndividualClient = TestHelpers.GetMockDbSet<IndividualClient>(clients);
-        Mock<DbSet<ProfessionalClient>> mockProfessionalClient = TestHelpers.GetMockDbSet<ProfessionalClient>(professionalClients);
-
-        _dbContextMock.Setup(db => db.IndividualClients).ReturnsDbSet(mockIndividualClient.Object);
-        _dbContextMock.Setup(db => db.ProfessionalClients).ReturnsDbSet(mockProfessionalClient.Object);
-
-        var command = new ClearCartCommand(client.Id);
-
-        var handler = new ClearCartCommandHandler(_dbContextMock.Object, CartService);
+        var handler = new ClearCartCommandHandler(DbContext, CartService);
 
         //Act
         Result result = await handler.Handle(command, default);
@@ -61,29 +43,12 @@ public class ClearCartTests : BaseIntegrationTest
     public async Task Should_ReturnSuccess_WhenClientExists()
     {
         //Arrange
-        var client = IndividualClient.Create(
-                Faker.Name.FirstName(),
-                Faker.Name.LastName());
+        var createClientHandler = new CreateClientCommandHandler(DbContext);
+        Guid clientId = (await createClientHandler.Handle(new(Faker.Name.FirstName(), Faker.Name.LastName()), default)).Value;
 
-        IQueryable<IndividualClient> clients = new List<IndividualClient>
-        {
-            client
-        }.AsQueryable();
+        var command = new ClearCartCommand(clientId);
 
-        IQueryable<ProfessionalClient> professionalClients = new List<ProfessionalClient>
-        {
-            ProfessionalClient.Create(Faker.Company.CompanyName(), "VATNumber", "BusinessNumber", 10_000m)
-        }.AsQueryable();
-
-        Mock<DbSet<IndividualClient>> mockIndividualClient = TestHelpers.GetMockDbSet<IndividualClient>(clients);
-        Mock<DbSet<ProfessionalClient>> mockProfessionalClient = TestHelpers.GetMockDbSet<ProfessionalClient>(professionalClients);
-
-        _dbContextMock.Setup(db => db.IndividualClients).ReturnsDbSet(mockIndividualClient.Object);
-        _dbContextMock.Setup(db => db.ProfessionalClients).ReturnsDbSet(mockProfessionalClient.Object);
-
-        var command = new ClearCartCommand(client.Id);
-
-        var handler = new ClearCartCommandHandler(_dbContextMock.Object, CartService);
+        var handler = new ClearCartCommandHandler(DbContext, CartService);
 
         //Act
         Result result = await handler.Handle(command, default);

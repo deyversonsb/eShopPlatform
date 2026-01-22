@@ -7,7 +7,6 @@ using Domain.Clients;
 using FluentAssertions;
 using FluentValidation.TestHelper;
 using IntegrationTests.Abstractions;
-using Moq;
 using SharedKernel;
 
 namespace IntegrationTests.Clients;
